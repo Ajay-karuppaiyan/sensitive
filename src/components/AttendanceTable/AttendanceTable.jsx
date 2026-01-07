@@ -232,12 +232,15 @@ const AttendanceTable = () => {
             {
                 Header: "S.No",
                 accessor: (row, index) => index + 1,
+                id: "sno", // ✅ add a unique ID
+                Cell: ({ value }) => <div className="text-center">{value}</div>, // optional: center the value
             },
             {
                 Header: "Employee",
                 accessor: "employeeId",
+                id: "employee",
                 Cell: ({ row }) => (
-                    <div className="flex flex-col">
+                    <div className="flex flex-col items-center justify-center text-center">
                         <span className="font-semibold">{row.original.employeeId}</span>
                         <span className="text-blue-600 font-semibold">{row.original.employeeName}</span>
                     </div>
@@ -246,14 +249,18 @@ const AttendanceTable = () => {
             {
                 Header: "Photo",
                 accessor: "photo",
+                id: "photo",
                 Cell: ({ row }) => (
-                    <img
-                        src={row.original.photo || "https://via.placeholder.com/150"}
-                        alt="Employee"
-                        className="w-12 h-12 rounded-full object-cover"
-                    />
+                    <div className="flex items-center justify-center">
+                        <img
+                            src={row.original.photo || "https://via.placeholder.com/150"}
+                            alt="Employee"
+                            className="w-12 h-12 rounded-full object-cover"
+                        />
+                    </div>
                 ),
             },
+
             {
                 Header: "Date",
                 accessor: (row) =>
@@ -262,6 +269,11 @@ const AttendanceTable = () => {
                         month: "2-digit",
                         year: "2-digit",
                     }).format(new Date(row.createdAt)),
+                Cell: ({ value }) => (
+                    <div className="flex justify-center items-center">
+                        {value}
+                    </div>
+                ),
             },
             {
                 Header: "Login Time",
@@ -270,59 +282,73 @@ const AttendanceTable = () => {
                         hour: "2-digit",
                         minute: "2-digit",
                     }),
+                Cell: ({ value }) => (
+                    <div className="flex justify-center items-center">
+                        {value}
+                    </div>
+                ),
             },
             {
                 Header: "Logout Time",
                 accessor: "logouttime",
-                Cell: ({ value }) => value ? (
-                    value
-                ) : (
-                    <span className="text-red-600 font-bold flex items-center">
-                        <FaExclamationTriangle className="mr-1" />
-                        Not Set
-                    </span>
+                Cell: ({ value }) => (
+                    <div className="flex justify-center items-center">
+                        {value ? (
+                            value
+                        ) : (
+                            <span className="text-red-600 font-bold flex items-center">
+                                <FaExclamationTriangle className="mr-1" />
+                                Not Set
+                            </span>
+                        )}
+                    </div>
                 ),
             },
             {
                 Header: "Work Report",
                 accessor: "workReport",
-                Cell: ({ value }) => value ?
-                    (value.length > 20 ? `${value.substring(0, 20)}...` : value) :
-                    <span className="text-orange-600 font-bold flex items-center">
-                        <FaExclamationTriangle className="mr-1" />
-                        Not Available
-                    </span>,
+                Cell: ({ value }) => (
+                    <div className="flex justify-center items-center">
+                        {value
+                            ? (value.length > 20 ? `${value.substring(0, 20)}...` : value)
+                            : (
+                                <span className="text-orange-600 font-bold flex items-center">
+                                    <FaExclamationTriangle className="mr-1" />
+                                    Not Available
+                                </span>
+                            )
+                        }
+                    </div>
+                ),
             },
             {
                 Header: "Actions",
                 accessor: "_id",
-                Cell: ({ row }) => {
-                    return (
-                        <div className="flex space-x-2">
-                            <button
-                                onClick={() => openDetailsModal(row.original)}
-                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 flex items-center text-sm"
-                                title="View Details"
-                            >
-                                <FaEye className="mr-1" />
-                                View
-                            </button>
+                Cell: ({ row }) => (
+                    <div className="flex justify-center items-center space-x-2">
+                        <button
+                            onClick={() => openDetailsModal(row.original)}
+                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 flex items-center text-sm"
+                            title="View Details"
+                        >
+                            <FaEye className="mr-1" />
+                            View
+                        </button>
 
-                            {role !== "Superadmin" && (
-                                !row.original.logouttime ? (
-                                    <button
-                                        onClick={() => openWorkReportModal(row.original._id)}
-                                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
-                                    >
-                                        Set Logout
-                                    </button>
-                                ) : (
-                                    <span className="text-gray-500 text-sm">Logout Set</span>
-                                )
-                            )}
-                        </div>
-                    );
-                },
+                        {role !== "Superadmin" && (
+                            !row.original.logouttime ? (
+                                <button
+                                    onClick={() => openWorkReportModal(row.original._id)}
+                                    className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm "
+                                >
+                                    Set Logout
+                                </button>
+                            ) : (
+                                <span className="text-gray-500 text-sm">Logout Set</span>
+                            )
+                        )}
+                    </div>
+                ),
             },
         ],
         []

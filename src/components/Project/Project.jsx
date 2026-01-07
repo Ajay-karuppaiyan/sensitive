@@ -364,102 +364,57 @@ const ProjectManager = () => {
             <p className="text-center p-4 text-red-500">{error}</p>
           ) : (
             <>
-              <table className="w-full">
-                <thead className="bg-[#2563eb] text-white border-b">
-                  <tr>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap">
-                      <div className="flex items-center">
-                        S.No
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('projectName')}>
-                      <div className="flex items-center">
-                        Project Name
-                        <span>{sortConfig.key === 'projectName' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('techStack')}>
-                      <div className="flex items-center">
-                        Tech Stack
-                        <span>{sortConfig.key === 'techStack' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('companyName')}>
-                      <div className="flex items-center">
-                        Client Company
-                        <span>{sortConfig.key === 'companyName' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('assignedTo')}>
-                      <div className="flex items-center">
-                        Assigned To
-                        <span>{sortConfig.key === 'assignedTo' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('duration')}>
-                      <div className="flex items-center">
-                        Duration
-                        <span>{sortConfig.key === 'duration' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap">
-                      <div className="flex items-center">
-                        Tasks
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('status')}>
-                      <div className="flex items-center">
-                        Status
-                        <span>{sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap" onClick={() => handleSort('createdDate')}>
-                      <div className="flex items-center">
-                        Created Date
-                        <span>{sortConfig.key === 'createdDate' ? (sortConfig.direction === 'asc' ? ' 🔼' : ' 🔽') : ''}</span>
-                      </div>
-                    </th>
-                    <th className="p-4 text-left cursor-pointer whitespace-nowrap">
-                      <div className="flex items-center">
-                        Actions
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedProjects.map((project, index) => (
-                    <tr key={project._id} className="border-b hover:bg-gray-50 transition-colors whitespace-nowrap">
-                      <td className="p-4">{currentPage * ITEMS_PER_PAGE + index + 1}</td>
-                      <td className="p-4">{project.displayData.projectName}</td>
-                      <td className="p-4">{project.displayData.techStack}</td>
-                      <td className="p-4">{project.displayData.companyName}</td>
-                      <td className="p-4">{project.displayData.assignedTo}</td>
-                      <td className="p-4">{project.displayData.duration}</td>
-                      <td className="p-4">{project.displayData.task}</td>
-                      <td className="p-4">{project.displayData.status}</td>
-                      <td className="p-4">{project.displayData.createdDate}</td>
-                      <td className="p-4">
-                        <div className="flex justify-center space-x-2">
-                          <button
-                            className="text-blue-500 hover:bg-blue-100 p-2 rounded-full"
-                            title="View Project"
-                            onClick={() => handleView(project)}
-                          >
-                            <Eye size={20} />
-                          </button>
-                          <button
-                            className="text-red-500 hover:bg-red-100 p-2 rounded-full"
-                            title="Delete Project"
-                            onClick={() => handleDelete(project._id)}
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <table className="w-full border-collapse">
+  <thead className="bg-[#2563eb] text-white border-b">
+  <tr>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">S.No</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Project Name</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Tech Stack</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Client Company</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Assigned To</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Duration</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Tasks</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Status</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Created Date</th>
+    <th className="p-4 text-center cursor-pointer whitespace-nowrap">Actions</th>
+  </tr>
+</thead>
+
+  <tbody>
+    {paginatedProjects.map((project, index) => (
+      <tr key={project._id} className="border-b hover:bg-gray-50 transition-colors whitespace-nowrap">
+        <td className="p-4 text-center">{currentPage * ITEMS_PER_PAGE + index + 1}</td>
+        <td className="p-4 text-left">{project.displayData.projectName}</td>
+        <td className="p-4 text-left">{project.displayData.techStack}</td>
+        <td className="p-4 text-left">{project.displayData.companyName}</td>
+        <td className="p-4 text-left">{project.displayData.assignedTo}</td>
+        <td className="p-4 text-left">{project.displayData.duration}</td>
+        <td className="p-4 text-left">{project.displayData.task}</td>
+        <td className="p-4 text-left">{project.displayData.status}</td>
+        <td className="p-4 text-left">{project.displayData.createdDate}</td>
+        <td className="p-4 text-center">
+          <div className="flex justify-center space-x-2">
+            <button
+              className="text-blue-500 hover:bg-blue-100 p-2 rounded-full"
+              title="View Project"
+              onClick={() => handleView(project)}
+            >
+              <Eye size={20} />
+            </button>
+            <button
+              className="text-red-500 hover:bg-red-100 p-2 rounded-full"
+              title="Delete Project"
+              onClick={() => handleDelete(project._id)}
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
 
               <div className="flex justify-between items-center p-4">
                 <div>

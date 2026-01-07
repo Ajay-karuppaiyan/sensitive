@@ -449,6 +449,20 @@ const EmployeeForm = () => {
             </div>
 
             <div>
+              <label className="block font-semibold">Status</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-md"
+                required
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block font-semibold">ID Proof Type</label>
               <select
                 name="idProofType"

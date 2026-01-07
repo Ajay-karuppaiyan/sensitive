@@ -89,48 +89,58 @@ const LoginPage = () => {
   };
 
   const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      const response = await verifyOTP({ email, otp });
+  try {
+    const response = await verifyOTP({ email, otp });
 
-      if (response.status === 200) {
-        const { _id, role } = response.data.employee || response.data.admin;
-        localStorage.setItem("empId", _id);
-        localStorage.setItem("role", role);
+    if (response.status === 200) {
+      const employeeData = response.data.employee || response.data.admin;
 
-        const expirationTime = new Date().getTime() + 10 * 60 * 1000;
-        localStorage.setItem("tokenExpiration", expirationTime.toString());
-
-        const from =
-          location.state?.from ||
-          (role === "employee"
-            ? "/attendance-form"
-            : role === "Superadmin" || role === "Lead"
-            ? "/dashboard"
-            : "/attendance-form");
-
-        navigate(from, { replace: true });
+      // ❌ BLOCK INACTIVE EMPLOYEES
+      if (employeeData.status === "Inactive") {
+        setError("Your account is inactive. Contact admin.");
+        return;
       }
-    } catch (error) {
-      console.error("OTP Verification Error:", error);
-      if (error.response) {
-        if (error.response.status === 401) {
-          setError("Invalid OTP. Please try again.");
-        } else if (error.response.status === 400) {
-          setError("OTP expired. Please request a new one.");
-        } else {
-          setError("An unexpected error occurred. Please try again later.");
-        }
-      } else {
-        setError("Network error. Please check your connection.");
-      }
-    } finally {
-      setLoading(false);
+
+      // ✅ Store info for active employees
+      const { _id, role } = employeeData;
+      localStorage.setItem("empId", _id);
+      localStorage.setItem("role", role);
+
+      const expirationTime = new Date().getTime() + 10 * 60 * 1000;
+      localStorage.setItem("tokenExpiration", expirationTime.toString());
+
+      const from =
+        location.state?.from ||
+        (role === "employee"
+          ? "/attendance-form"
+          : role === "Superadmin" || role === "Lead"
+          ? "/dashboard"
+          : "/attendance-form");
+
+      navigate(from, { replace: true });
     }
-  };
+  } catch (error) {
+    console.error("OTP Verification Error:", error);
+    if (error.response) {
+      if (error.response.status === 401) {
+        setError("Invalid OTP. Please try again.");
+      } else if (error.response.status === 400) {
+        setError("OTP expired. Please request a new one.");
+      } else {
+        setError("An unexpected error occurred. Please try again later.");
+      }
+    } else {
+      setError("Network error. Please check your connection.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleResendOTP = async () => {
     if (countdown > 0) return;
