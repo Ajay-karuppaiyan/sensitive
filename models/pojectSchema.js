@@ -28,6 +28,7 @@ const projectSchema = new mongoose.Schema({
     nda: { type: String },
     msa: { type: String },
     assignedTo: { type: String },
+    empId: { type: String },
     status: { type: String },
     createdDate: { type: String },
   }],

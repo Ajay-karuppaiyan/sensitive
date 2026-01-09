@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { createTask, employeename, projectname } from "../../api/services/projectServices";
@@ -260,7 +259,6 @@ function TaskForm() {
                   value={task.date}
                   onChange={(e) => handleChange(index, e)}
                   required
-                  min={new Date().toISOString().split("T")[0]} // <-- prevents past dates
                   className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>

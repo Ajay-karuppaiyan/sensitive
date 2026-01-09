@@ -18,6 +18,7 @@ const createProject = async (req, res) => {
     res.status(500).json({ message: "Error creating project" });
   }
 };
+
 const getAllProjects = async (req, res) => {
   try {
     const { id } = req.params; 
@@ -132,6 +133,53 @@ const getTotalProjects = async (req, res) => {
   }
 };
 
+/* ===================== GET PROJECTS BY EMPLOYEE ===================== */
+const getProjectsByEmployee = async (req, res) => {
+  try {
+    const { empId } = req.params;
+
+    if (!empId) {
+      return res.status(400).json({ success: false, message: "Employee ID is required" });
+    }
+
+    const employee = await employeeSchema.findOne({ empId });
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    }
+
+    const projects = await Project.find({
+      additionalDetails: {
+        $elemMatch: {
+          $or: [
+            { empId: empId },
+            { assignedTo: employee.name }
+          ]
+        }
+      }
+    }).sort({ createdAt: -1 });
+
+    if (!projects.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No projects assigned to this employee"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: projects.length,
+      data: projects
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
+
 
 module.exports = {
   createProject,
@@ -141,5 +189,6 @@ module.exports = {
   deleteProjectById,
   getProjectNames,
   getTotalProjects,
+  getProjectsByEmployee
 };
 

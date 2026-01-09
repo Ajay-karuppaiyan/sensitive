@@ -106,9 +106,10 @@ const LoginPage = () => {
       }
 
       // ✅ Store info for active employees
-      const { _id, role } = employeeData;
+      const { _id, role,empId } = employeeData;
       localStorage.setItem("empId", _id);
       localStorage.setItem("role", role);
+      localStorage.setItem("stid",empId)
 
       const expirationTime = new Date().getTime() + 10 * 60 * 1000;
       localStorage.setItem("tokenExpiration", expirationTime.toString());

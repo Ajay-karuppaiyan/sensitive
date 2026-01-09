@@ -1,131 +1,204 @@
 const attendanceModel = require("../models/attendanceModel");
 const employeeSchema = require("../models/employeeSchema");
-const { uploadImage } = require("../config/cloudinary");
+const { uploadImage } = require("../config/cloudinary"); 
 
-exports.createAttendance = async (req, res) => {
-  try {
-    console.log("CREATE Attendance", req.body);
-    const empdata = await employeeSchema.findOne({ _id: req.body.employeeId }, { name: 1, empId: 1 })
+/* =============================== CREATE ATTENDANCE (LOGIN) ================================ */ 
+exports.createAttendance = async (req, res) => { 
+    try { 
+        console.log("CREATE Attendance", req.body); 
+        const { employeeId } = req.body;
 
-    const attendance = new attendanceModel(req.body);
-    attendance.employeeName = empdata.name
-    attendance.employeeId = empdata.empId
+        // Validate employee 
+        const empdata = await employeeSchema.findById(employeeId, { name: 1, empId: 1 }); 
+        if (!empdata) { 
+            return res.status(404).json({ message: "Employee not found" });
+        } 
 
-    await attendance.save();
+        const attendance = new attendanceModel({ 
+            ...req.body, 
+            employeeName: empdata.name, 
+            employeeId: empdata._id, // ✅ MongoDB _id 
+            empId: empdata.empId // optional, useful for display 
+        }); 
 
-    res.status(201).json({ message: "Attendance record created successfully", attendance });
-  } catch (error) {
-    console.error("Error creating attendance record:", error);
-    res.status(400).json({ message: error.message });
-  }
-};
+        await attendance.save(); 
+        res.status(201).json({ message: "Attendance record created successfully", attendance }); 
+    } 
+    catch (error) { 
+        console.error("Error creating attendance:", error); 
+        res.status(400).json({ message: error.message });
+    } 
+}; 
 
-exports.getAllAttendance = async (req, res) => {
-  try {
-    const { id } = req.params
-    console.log(id)
-    const empdata = await employeeSchema.findOne({ _id: id }, { role: 1,empId:1 })
-    console.log("empdata puja", empdata)
-    let attendanceRecords
+/* =============================== GET ALL ATTENDANCE ADMIN → ALL EMPLOYEE → OWN ================================ */ 
+exports.getAllAttendance = async (req, res) => { 
+    try { 
+        const { id } = req.params; 
+        const empdata = await employeeSchema.findById(id, { role: 1 }); 
 
-    if (id == "6779360b3fb6809073b96ef4") {
-      attendanceRecords = await attendanceModel.find();
-    }
-    else {
-      attendanceRecords = await attendanceModel.find({ employeeId: empdata.empId });
-    }
-    console.log("GET all attendance records", attendanceRecords);
-    res.status(200).json(attendanceRecords);
-  } catch (error) {
-    console.error("Error fetching attendance records:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-// exports.logoutAttendance = async (req, res) => {
+        if (!empdata) { 
+            return res.status(404).json({ message: "Employee not found" }); 
+        } 
+
+        let attendanceRecords; 
+        if (empdata.role === "admin") { 
+            attendanceRecords = await attendanceModel.find().sort({ createdAt: -1 }); 
+        } else { 
+            attendanceRecords = await attendanceModel.find({ employeeId: empdata._id }).sort({ createdAt: -1 }); 
+        } 
+
+        console.log("GET Attendance Records:", attendanceRecords); 
+        res.status(200).json(attendanceRecords); 
+    } 
+    catch (error) { 
+        console.error("Error fetching attendance:", error); 
+        res.status(500).json({ message: error.message }); 
+    } 
+}; 
+
+/* =============================== LOGOUT ATTENDANCE ================================ */ 
+exports.logoutAttendance = async (req, res) => { 
+    try { 
+        const { id } = req.params; 
+        const { logouttime, workReport } = req.body; 
+
+        if (!logouttime) { 
+            return res.status(400).json({ message: "Logout time is required" }); 
+        } 
+
+        if (!workReport) { 
+            return res.status(400).json({ message: "Work report is required" }); 
+        } 
+
+        const updateData = { logouttime, workReport }; 
+
+        // Upload attachment if exists 
+        if (req.file) { 
+            try { 
+                updateData.attachment = await uploadImage(req.file.buffer); 
+            } 
+            catch (uploadError) { 
+                console.error("Cloudinary upload failed:", uploadError); 
+                return res.status(400).json({ message: "Attachment upload failed" }); 
+            } 
+        } 
+
+        const updatedAttendance = await attendanceModel.findByIdAndUpdate(id, { $set: updateData }, { new: true }); 
+        if (!updatedAttendance) { 
+            return res.status(404).json({ message: "Attendance record not found" }); 
+        } 
+
+        res.status(200).json({ message: "Logout successful", updatedAttendance }); 
+    } 
+    catch (error) { 
+        console.error("Error updating logout:", error); 
+        res.status(500).json({ message: error.message }); 
+    } 
+}; 
+
+/* =============================== TOTAL ATTENDANCE COUNT ================================ */ 
+exports.getTotalAttendance = async (req, res) => { 
+    try { 
+        const totalAttendance = await attendanceModel.countDocuments(); 
+        res.status(200).json({ TotalAttendance: totalAttendance }); 
+    } 
+    catch (error) { 
+        console.error("Error fetching total attendance:", error); 
+        res.status(500).json({ message: error.message }); 
+    } 
+}; 
+
+/* =============================== ADMIN: TOTAL PRESENT TODAY ================================ */ 
+exports.getTodayPresentCount = async (req, res) => { 
+    try { 
+        // Get today's date in YYYY-MM-DD format 
+        const today = new Date().toISOString().split("T")[0]; 
+
+        // Count employees who logged in today 
+        const presentCount = await attendanceModel.countDocuments({ date: today }); 
+        res.status(200).json({ date: today, presentToday: presentCount || 0 }); 
+    } 
+    catch (error) { 
+        console.error("Error fetching today's present count:", error); 
+        res.status(500).json({ message: error.message }); 
+    } 
+}; 
+
+/* =============================== EMPLOYEE: MONTHLY LOGIN COUNT ================================ */ 
+// const getMyMonthlyAttendanceCount = async (req, res) => {
 //   try {
-//     const { id } = req.params;  
-//     const { logouttime } = req.body;
-//     if (!logouttime) {
-//       return res.status(400).json({ message: "Logout time is required" });
-//     }
-//     const updatedAttendance = await attendanceModel.findByIdAndUpdate(
-//       id,
-//       { logouttime: logouttime },
-//       { new: true }
-//     );
+//     // Get empId from login/session/token (example: from req.user or req.params)
+//     const empId = req.params.empId; // or req.user.empId if using auth middleware
 
-//     if (!updatedAttendance) {
-//       return res.status(404).json({ message: "Attendance record not found" });
-//     }
+//     // Find employee document
+//     const employee = await Employee.findOne({ empId: empId });
+//     if (!employee) return res.status(404).json({ count: 0, message: "Employee not found" });
 
-//     console.log("Updated logout time for attendance record:", updatedAttendance);
-//     res.status(200).json({ message: "Logout time updated successfully", updatedAttendance });
+//     const now = new Date();
+//     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+//     // Count attendance for this employee in current month
+//     const count = await Attendance.countDocuments({
+//       employee: employee._id,
+//       date: { $gte: startOfMonth, $lte: endOfMonth },
+//     });
+
+//     return res.status(200).json({ count }); // returns only the number
 //   } catch (error) {
-//     console.error("Error updating logout time:", error);
-//     res.status(500).json({ message: error.message });
+//     console.error(error);
+//     return res.status(500).json({ message: "Server error" });
 //   }
 // };
 
+// module.exports = getMyMonthlyAttendanceCount;
 
-exports.logoutAttendance = async (req, res) => {
+exports.getMonthlyAttendanceForEmployee = async (req, res) => {
   try {
-    const { id } = req.params;  
-    const { logouttime, workReport } = req.body;
-    
-    if (!logouttime) {
-      return res.status(400).json({ message: "Logout time is required" });
-    }
-    
-    if (!workReport) {
-      return res.status(400).json({ message: "Work report is required" });
-    }
-    
-    // Build update object
-    const updateData = {
-      logouttime: logouttime,
-      workReport: workReport
-    };
-    
-    // Upload attachment to Cloudinary if file exists
-    if (req.file) {
-      try {
-        updateData.attachment = await uploadImage(req.file.buffer);
-      } catch (uploadError) {
-        console.error("Error uploading attachment to Cloudinary:", uploadError);
-        return res.status(400).json({ message: "Failed to upload attachment" });
-      }
-    }
-    
-    const updatedAttendance = await attendanceModel.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
+    const { empId } = req.params;
+
+    const employee = await employeeSchema.findOne(
+      { empId },
+      { empId: 1, name: 1 }
     );
 
-    if (!updatedAttendance) {
-      return res.status(404).json({ message: "Attendance record not found" });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
     }
 
-    console.log("Updated logout time and work report for attendance record:", updatedAttendance);
-    res.status(200).json({ 
-      message: "Logout time and work report updated successfully", 
-      updatedAttendance 
+    const now = new Date();
+
+    const startOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1,
+      0, 0, 0, 0
+    );
+
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23, 59, 59, 999
+    );
+
+    const totalAttendance = await attendanceModel.countDocuments({
+      employeeId: empId,
+      date: {
+        $gte: startOfMonth,
+        $lte: endOfMonth,
+      },
     });
-    
-  } catch (error) {
-    console.error("Error updating logout time:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
 
-exports.getTotalAttendance = async (req, res) => {
-  try {
-    const totalAttendance = await attendanceModel.countDocuments();
-
-    console.log("Total attendance count:", totalAttendance);
-    res.status(200).json({ TotalAttendance: totalAttendance });
+    res.status(200).json({
+      empId: employee.empId,
+      employeeName: employee.name,
+      month: now.toLocaleString("default", { month: "long" }),
+      year: now.getFullYear(),
+      totalAttendance,
+    });
   } catch (error) {
-    console.error("Error fetching total attendance:", error);
+    console.error("Monthly Attendance Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

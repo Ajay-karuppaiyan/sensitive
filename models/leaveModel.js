@@ -1,8 +1,8 @@
-  const mongoose = require('mongoose');
-
+const mongoose = require('mongoose');
 
 const leaveSchema = new mongoose.Schema({
-  employee: { type: String },
+  employee: { type: String },   // employee ID
+  employeeName: { type: String }, // employee name 
   leaveCategory: { type: String },  
   leaveType: { type: String }, 
   customLeaveType: { type: String }, 

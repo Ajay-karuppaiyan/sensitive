@@ -1,5 +1,5 @@
 import { projectServices } from "../axios/axiosInstance";
-
+import axios from "axios";
 
 // export const verifyLogin = async (formData) => {
 //   try {
@@ -14,16 +14,25 @@ import { projectServices } from "../axios/axiosInstance";
 export const verifyLogin = async (formData) => {
   try {
     const response = await projectServices.post(`/employee-login/login`, formData);
-    
-    // Set expiration to 10 minutes (600,000 milliseconds)
+
+    // Store Mongo _id in empId (frontend uses this)
+    localStorage.setItem("empId", response.data.employee._id);
+
+    // Store actual employee ID (empId in DB) in userId
+    localStorage.setItem("userId", response.data.employee.empId);
+
+    localStorage.setItem("role", response.data.employee.role);
+
+    // Set expiration 10 mins
     const expirationTime = new Date().getTime() + 600000;
     localStorage.setItem("tokenExpiration", expirationTime.toString());
-    
+
     return response;
   } catch (err) {
     throw err;
   }
 };
+
 
 export const sendOTP = async (data) => {
   try {
@@ -165,6 +174,22 @@ export const updateTheTask = async (taskId, formData) => {
   }
 };
 
+export const getTasks = async () => {
+  try {
+    const response = await projectServices.get(`/task/totaltasks`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getMyTasks = async (stid) => {
+  try {
+    return await API.get(`/task/my-tasks/${stid}`);
+  } catch (error) {
+    return error.response;
+  }
+};
 
 export const createPayroll=async(formData) => {
   try {
@@ -225,16 +250,6 @@ export const getTotalEmployees=async() => {
   }
 };
 
-
-export const getAttendance = async () => {
-  try {
-    const response = await projectServices.get(`/attendance/totalattendance`);
-    return response;
-  } catch (err) {
-    return err;
-  }
-};
-
 export const getTotalProjects = async () => {
   try {
     const response = await projectServices.get(`/project/totalprojects`);
@@ -244,12 +259,13 @@ export const getTotalProjects = async () => {
   }
 };
 
-export const getTasks = async () => {
+export const getProjectsByEmployee = async (empId) => {
   try {
-    const response = await projectServices.get(`/task/totaltasks`);
+    const response = await projectAPI.get(`/assigned/${empId}`);
     return response;
   } catch (err) {
-    return err;
+    console.error("Error fetching employee projects:", err);
+    return err.response || err;
   }
 };
 
@@ -271,6 +287,63 @@ export const getLeave = async () => {
   }
 };
 
+export const getTodayLeaves = async () => {
+  try {
+    const response = await projectServices.get("/leaves/today");
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+// ===================== ATTENDANCE FOR DASHBOARD =====================
+
+// ========================= ATTENDANCE FUNCTIONS =========================
+
+// export const getAttendance = async () => {
+//   try {
+//     const response = await projectServices.get(`/attendance/totalattendance`);
+//     return response;
+//   } catch (err) {
+//     return err;
+//   }
+// };
+// Get total attendance of all employees (all-time)
+
+// Admin: Get total attendance of all employees
+export const getAttendance = async () => {
+  try {
+    const response = await projectServices.get(`/attendance/totalattendance`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+// Admin: Get employees present today
+export const getTodayPresentCount = async () => {
+  try {
+    const response = await axios.get("http://localhost:3000/api/attendance/present-today");
+    return response;
+  } catch (error) {
+    console.error("Error fetching today present count:", error);
+    throw error;
+  }
+};
+
+
+// Employee: Get monthly attendance using userId
+export const getMyMonthlyAttendance = async (stid) => {
+  try {
+    const response = await projectServices.get(`/api/attendance/employee/monthly-attendance/${stid}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
 export const getTotalPayrolls = async () => {
   try {
     const response = await projectServices.get(`/payroll/totalpayrolls`);
@@ -289,7 +362,6 @@ export const getTotalLeads = async () => {
   }
 };
 
-
 export const getLeaveById = async (id) => {
   try {
     const response = await projectServices.get(`/leaves/get/${id}`, {
@@ -302,6 +374,16 @@ export const getLeaveById = async (id) => {
     return err;
   }
 };
+
+export const getMonthlyLeaveByEmpId = async (stid) => {
+  try {
+    const response = await projectServices.get(`/leaves/employee/current-month/${stid}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
 
 export const createPayment = async (formData) => {
   try {
@@ -509,4 +591,5 @@ export const getQuotationsById = async (quotationId) => {
     return err;
   }
 };
+
 

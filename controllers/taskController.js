@@ -25,6 +25,7 @@ const createTask = async (req, res) => {
       });
   }
 };
+
 const getAllTasks = async (req, res) => {
   try{
     const {id} = req.params;
@@ -51,6 +52,7 @@ const getAllTasks = async (req, res) => {
     res.status(500).json({ message: "Error fetching projects" });
   }
 };
+
 const getTaskById = async (req, res) => {
   console.log("Edit task==>")
   const { id } = req.params;
@@ -168,6 +170,45 @@ const getTotalTasks = async (req, res) => {
   }
 };
 
+const getTasksByEmployee = async (req, res) => {
+  try {
+    const { empId } = req.params; // from frontend (stid)
+
+    if (!empId) {
+      return res.status(400).json({
+        message: "Employee ID is required"
+      });
+    }
+
+    // Find employee by empId
+    const employee = await employeeSchema.findOne({ empId });
+
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found"
+      });
+    }
+
+    const tasks = await Task.find({
+      $or: [
+        { empId: employee.empId },
+        { empId: employee.name }
+      ]
+    });
+
+    res.status(200).json({
+      totalTasks: tasks.length,
+      tasks
+    });
+  } catch (error) {
+    console.error("Error fetching tasks for employee:", error);
+
+    res.status(500).json({
+      message: "Failed to fetch tasks",
+      error: error.message
+    });
+  }
+};
 
 module.exports = {
   createTask,
@@ -177,4 +218,5 @@ module.exports = {
   updateTaskStatus, 
   deleteTask,
   getTotalTasks,
+  getTasksByEmployee
 };

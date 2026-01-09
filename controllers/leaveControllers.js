@@ -170,3 +170,84 @@ exports.getTotalLeaveRequests = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Get leave requests by employee ID (empId)
+exports.getLeaveRequestsByEmployeeId = async (req, res) => {
+  try {
+    const { empId } = req.params; // Example: STJEYR456
+
+    // Find the employee by their employee ID
+    const employee = await employeeSchema.findOne({ empId }, { name: 1 });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // Fetch leaves for this employee
+    const leaves = await leaveModel.find({ employee: employee.name });
+    console.log(`Leaves for ${empId}:`, leaves);
+
+    res.status(200).json(leaves);
+  } catch (error) {
+    console.error('Error fetching leaves for employee:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get leave requests for a specific employee for the current month by empId
+exports.getLeaveRequestsByEmployeeCurrentMonth = async (req, res) => {
+  try {
+    const { empId } = req.params; // Employee ID passed in URL
+
+    if (!empId) {
+      return res.status(400).json({ message: "Employee ID is required" });
+    }
+
+    // Find employee by empId
+    const employee = await employeeSchema.findOne({ empId }, { name: 1 });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // Get current month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Find leaves for this employee within current month
+    const leaves = await leaveModel.find({
+      employee: employee.name,
+      startDate: { $lte: endOfMonth },
+      endDate: { $gte: startOfMonth }
+    });
+
+    res.status(200).json(leaves);
+  } catch (error) {
+    console.error('Error fetching leaves for current month:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get all leaves for today
+exports.getTodayLeaves = async (req, res) => {
+  try {
+    const today = new Date();
+    // Start and end of today
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
+    // Find leaves where today falls between startDate and endDate
+    const leaves = await leaveModel.find({
+      $or: [
+        {
+          startDate: { $lte: endOfToday },
+          endDate: { $gte: startOfToday }
+        }
+      ]
+    });
+
+    res.status(200).json(leaves);
+  } catch (error) {
+    console.error("Error fetching today's leaves:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
