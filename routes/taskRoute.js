@@ -14,5 +14,6 @@ taskRouter.delete('/deletetask/:id', taskController.deleteTask);
 taskRouter.post('/createtask',upload.single("attachments"), taskController.createTask);
 taskRouter.put('/update-status/:id',taskController.updateTaskStatus); 
 taskRouter.get('/totaltasks', taskController.getTotalTasks);
+taskRouter.get("/employee/:empId", taskController.getTasksByEmployee);
 
 module.exports = taskRouter;

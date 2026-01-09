@@ -12,6 +12,7 @@ projectRouter.put("/updateprojectby/:id",upload.single("projectDocument"), proje
 projectRouter.delete("/deleteproject/:id", projectController.deleteProjectById);
 projectRouter.get("/projectname", projectController.getProjectNames);
 projectRouter.get('/totalprojects', projectController.getTotalProjects);
+projectRouter.get("/assigned/:empId", projectController.getProjectsByEmployee);
 
 
 module.exports = projectRouter;

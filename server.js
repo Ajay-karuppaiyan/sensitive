@@ -35,7 +35,7 @@ app.use(cors());
 app.use('/', attendanceRoutes);
 app.use('/clients', clientRoutes);
 app.use('/leaves', leaveRoutes);
-app.use('/attendance', attendanceRoutes);
+app.use('/api/attendance', attendanceRoutes);
 app.use('/leads', leadRoutes);
 app.use('/payroll',payrollRoutes);
 app.use('/updatelog',updateLogRoutes);
